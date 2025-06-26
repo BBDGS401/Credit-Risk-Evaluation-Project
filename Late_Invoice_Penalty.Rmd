@@ -1,0 +1,46 @@
+---
+title: "Late Invoice Penalty"
+author: "Cheeson Lau"
+date: "2025-05-30"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+Import the late invoice
+```{r}
+df_detail <- read.csv("all_late_invoice_detail.csv")
+```
+
+Group by Counterparty
+```{r}
+late_amount_summary <- df_detail %>% 
+  group_by(Counterparty) %>% 
+  summarise(TotalLateInvoiceAmount = sum(Invoice.Amount)) %>% 
+  arrange(desc(TotalLateInvoiceAmount))
+
+late_amount_summary
+```
+
+I decide to divided these counterparties into 4 groups. They have different penalty allocation. More amount paid late, more penalty on their credit limit. The amount can be changed if you think it is too much or too little.
+
+Total Late Amount > $100,000 -- Deduct 8%
+\$10,000 < Total Late Amount < \$99,999 -- Deduct 6%
+\$1,000 < Total Late Amount < $9,999 -- Deduct 4%
+Total Late Amount < $999 -- Deduct 2%
+
+
+Histogram to visualize late invoice amount better.
+```{r}
+ggplot(late_amount_summary, aes(x = Counterparty, y = TotalLateInvoiceAmount)) +
+  geom_bar(stat = "identity", fill = "darkgray") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Total Late Invoice Amount by Counterparty",
+       x = "Counterparty",
+       y = "Total Late Invoice Amount")
+```
+
